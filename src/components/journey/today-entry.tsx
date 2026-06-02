@@ -25,7 +25,7 @@ export function TodayEntry() {
     saveJourneyEntry({ content: trimmedContent });
     setContent("");
     setErrorMessage("");
-    setSuccessMessage("Journey Recorded / 旅途已记录");
+    setSuccessMessage("Journey Recorded");
   }
 
   return (
@@ -53,7 +53,14 @@ export function TodayEntry() {
             <p className="mt-2 text-xs text-destructive">{errorMessage}</p>
           )}
           {successMessage && (
-            <p className="mt-2 text-xs text-primary">{successMessage}</p>
+            <div className="mt-3 rounded-lg border border-white/70 bg-secondary/60 px-3 py-2">
+              <p className="text-sm font-medium text-primary">
+                {successMessage}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                旅途已记录
+              </p>
+            </div>
           )}
         </div>
         <Button onClick={handleSave}>Advance Journey 推进旅程</Button>
