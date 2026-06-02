@@ -22,10 +22,14 @@ export function TodayEntry() {
       return;
     }
 
-    saveJourneyEntry({ content: trimmedContent });
-    setContent("");
-    setErrorMessage("");
-    setSuccessMessage("Journey Recorded");
+    try {
+      saveJourneyEntry({ content: trimmedContent });
+      setContent("");
+      setErrorMessage("");
+      setSuccessMessage("Journey Recorded");
+    } catch {
+      setErrorMessage("Unable to save entry. 暂时无法保存这段旅途。");
+    }
   }
 
   return (
@@ -44,16 +48,20 @@ export function TodayEntry() {
         placeholder="记录你的经历、想法、感受……"
       />
 
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <div>
+      <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
           <p className="text-xs text-muted-foreground">
             {content.length} / {MAX_ENTRY_LENGTH}
           </p>
           {errorMessage && (
-            <p className="mt-2 text-xs text-destructive">{errorMessage}</p>
+            <div className="mt-3 rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2">
+              <p className="break-words text-sm font-medium text-destructive">
+                {errorMessage}
+              </p>
+            </div>
           )}
           {successMessage && (
-            <div className="mt-3 rounded-lg border border-white/70 bg-secondary/60 px-3 py-2">
+            <div className="mt-3 rounded-lg border border-white/70 bg-secondary/70 px-3 py-2">
               <p className="text-sm font-medium text-primary">
                 {successMessage}
               </p>
@@ -63,7 +71,9 @@ export function TodayEntry() {
             </div>
           )}
         </div>
-        <Button onClick={handleSave}>Advance Journey 推进旅程</Button>
+        <Button className="w-full sm:w-auto" onClick={handleSave}>
+          Advance Journey 推进旅程
+        </Button>
       </div>
     </SurfaceCard>
   );

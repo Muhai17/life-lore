@@ -2,8 +2,16 @@ import type { JourneyEntry, NewJourneyEntry } from "@/types/journey-entry";
 
 const JOURNEY_ENTRIES_STORAGE_KEY = "life-lore:journey-entries";
 
-function canUseStorage() {
-  return typeof window !== "undefined" && !!window.localStorage;
+function getStorage() {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
 }
 
 function createEntryId() {
@@ -15,11 +23,19 @@ function createEntryId() {
 }
 
 function readEntriesFromStorage(): JourneyEntry[] {
-  if (!canUseStorage()) {
+  const storage = getStorage();
+
+  if (!storage) {
     return [];
   }
 
-  const rawEntries = window.localStorage.getItem(JOURNEY_ENTRIES_STORAGE_KEY);
+  let rawEntries: string | null = null;
+
+  try {
+    rawEntries = storage.getItem(JOURNEY_ENTRIES_STORAGE_KEY);
+  } catch {
+    return [];
+  }
 
   if (!rawEntries) {
     return [];
@@ -46,14 +62,17 @@ function readEntriesFromStorage(): JourneyEntry[] {
 }
 
 function writeEntriesToStorage(entries: JourneyEntry[]) {
-  if (!canUseStorage()) {
-    return;
+  const storage = getStorage();
+
+  if (!storage) {
+    throw new Error("Journey storage is unavailable.");
   }
 
-  window.localStorage.setItem(
-    JOURNEY_ENTRIES_STORAGE_KEY,
-    JSON.stringify(entries)
-  );
+  try {
+    storage.setItem(JOURNEY_ENTRIES_STORAGE_KEY, JSON.stringify(entries));
+  } catch {
+    throw new Error("Journey storage could not save this entry.");
+  }
 }
 
 export function getJourneyEntries() {
@@ -80,9 +99,15 @@ export function getJourneyEntryById(id: string) {
 }
 
 export function clearJourneyEntries() {
-  if (!canUseStorage()) {
+  const storage = getStorage();
+
+  if (!storage) {
     return;
   }
 
-  window.localStorage.removeItem(JOURNEY_ENTRIES_STORAGE_KEY);
+  try {
+    storage.removeItem(JOURNEY_ENTRIES_STORAGE_KEY);
+  } catch {
+    return;
+  }
 }

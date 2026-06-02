@@ -16,12 +16,19 @@ function sortNewestFirst(entries: JourneyEntry[]) {
 }
 
 function formatEntryDate(createdAt: string) {
+  const date = new Date(createdAt);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Unknown time";
+  }
+
   return new Intl.DateTimeFormat("en", {
+    year: "numeric",
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
-  }).format(new Date(createdAt));
+  }).format(date);
 }
 
 export function StoryLogPage() {
@@ -55,6 +62,9 @@ export function StoryLogPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 还没有旅程记录
               </p>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-muted-foreground">
+                在 Journey 页面写下第一段今日记录后，它会安静地出现在这里。
+              </p>
             </div>
           ) : (
             <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
@@ -70,12 +80,16 @@ export function StoryLogPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedEntry(entry)}
-                      className="rounded-lg border border-white/70 bg-background/70 p-5 text-left transition-colors hover:bg-white/60"
+                      className={`rounded-lg border p-5 text-left transition-colors hover:bg-white/60 ${
+                        selectedEntry?.id === entry.id
+                          ? "border-primary/25 bg-white/70"
+                          : "border-white/70 bg-background/70"
+                      }`}
                     >
                       <h3 className="text-xl font-medium text-foreground">
                         Journey Entry
                       </h3>
-                      <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-muted-foreground">
+                      <p className="mt-2 line-clamp-3 whitespace-pre-wrap break-words text-sm leading-6 text-muted-foreground">
                         {entry.content}
                       </p>
                     </button>
@@ -94,7 +108,7 @@ export function StoryLogPage() {
                     <p className="text-sm text-muted-foreground">
                       {formatEntryDate(selectedEntry.createdAt)}
                     </p>
-                    <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-foreground">
+                    <p className="mt-4 max-h-[420px] overflow-y-auto whitespace-pre-wrap break-words pr-2 text-sm leading-7 text-foreground">
                       {selectedEntry.content}
                     </p>
                   </div>
