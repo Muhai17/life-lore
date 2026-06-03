@@ -1,23 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Circle, Sparkles } from "lucide-react";
+import { CheckCircle2, Circle, Sparkles } from "lucide-react";
 import { PageHeader, PageShell } from "@/components/ui/page-shell";
 import { Button } from "@/components/ui/button";
 import { CardHeader, SurfaceCard } from "@/components/ui/surface-card";
 import {
   getDailyQuests,
+  getTodayCompletions,
   saveDailyQuest,
+  toggleDailyQuestCompletion,
 } from "@/lib/storage/daily-quest-storage";
-import type { DailyQuest } from "@/types/daily-quest";
+import type { DailyQuest, DailyQuestCompletion } from "@/types/daily-quest";
 
 export function DailyQuestPage() {
   const [quests, setQuests] = useState<DailyQuest[]>([]);
+  const [completions, setCompletions] = useState<DailyQuestCompletion[]>([]);
   const [title, setTitle] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     setQuests(getDailyQuests());
+    setCompletions(getTodayCompletions());
   }, []);
 
   function handleAddQuest() {
@@ -35,6 +39,11 @@ export function DailyQuestPage() {
     setErrorMessage("");
   }
 
+  function handleToggleCompletion(questId: string) {
+    toggleDailyQuestCompletion(questId);
+    setCompletions(getTodayCompletions());
+  }
+
   return (
     <PageShell>
       <PageHeader
@@ -47,7 +56,7 @@ export function DailyQuestPage() {
         <SurfaceCard>
           <CardHeader title="Today Focus" description="今日专注" />
           <div className="mt-8 flex h-28 w-28 items-center justify-center rounded-full bg-secondary/70 text-3xl font-medium text-primary">
-            {quests.length}
+            {completions.length} / {quests.length}
           </div>
           <p className="mt-6 text-sm leading-6 text-muted-foreground">
             保持节奏，不追求完成全部，只确认今天确实向前了一点。
@@ -77,17 +86,35 @@ export function DailyQuestPage() {
           </article>
 
           {quests.map((quest) => {
+            const isCompleted = completions.some((completion) => {
+              return completion.questId === quest.id;
+            });
+            const StatusIcon = isCompleted ? CheckCircle2 : Circle;
+
             return (
               <article
                 key={quest.id}
                 className="rounded-lg border border-white/70 bg-white/58 p-6 shadow-[0_18px_54px_rgba(44,52,64,0.06)]"
               >
                 <div className="flex flex-col items-start gap-4 sm:flex-row">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary/70 text-primary">
-                    <Circle className="h-5 w-5" />
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleCompletion(quest.id)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary/70 text-primary transition-colors hover:bg-secondary"
+                    aria-label={
+                      isCompleted
+                        ? "Mark quest incomplete"
+                        : "Mark quest complete"
+                    }
+                  >
+                    <StatusIcon className="h-5 w-5" />
+                  </button>
                   <div className="min-w-0 flex-1">
-                    <h2 className="text-lg font-medium leading-7 text-foreground">
+                    <h2
+                      className={`text-lg font-medium leading-7 text-foreground ${
+                        isCompleted ? "text-muted-foreground line-through" : ""
+                      }`}
+                    >
                       {quest.title}
                     </h2>
                     {quest.description && (
