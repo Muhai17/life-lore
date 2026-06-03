@@ -12,7 +12,44 @@ import {
   saveDailyQuest,
   toggleDailyQuestCompletion,
 } from "@/lib/storage/daily-quest-storage";
-import type { DailyQuest, DailyQuestCompletion } from "@/types/daily-quest";
+import type {
+  DailyQuest,
+  DailyQuestCompletion,
+  DailyQuestRewardPreview,
+} from "@/types/daily-quest";
+
+const DEFAULT_REWARD_PREVIEWS: DailyQuestRewardPreview[] = [
+  {
+    resourceType: "knowledgeScroll",
+    amount: 5,
+  },
+  {
+    resourceType: "lifeEmber",
+    amount: 3,
+  },
+  {
+    resourceType: "creationShard",
+    amount: 3,
+  },
+];
+
+const REWARD_LABELS: Record<DailyQuestRewardPreview["resourceType"], string> = {
+  knowledgeScroll: "Knowledge Scroll",
+  creationShard: "Creation Shard",
+  lifeEmber: "Life Ember",
+  companions: "Companions",
+  coinPouch: "Coin Pouch",
+};
+
+function getDefaultRewardPreview(questCount: number) {
+  return DEFAULT_REWARD_PREVIEWS[
+    questCount % DEFAULT_REWARD_PREVIEWS.length
+  ];
+}
+
+function formatRewardPreview(rewardPreview: DailyQuestRewardPreview) {
+  return `${REWARD_LABELS[rewardPreview.resourceType]} +${rewardPreview.amount}`;
+}
 
 export function DailyQuestPage() {
   const [quests, setQuests] = useState<DailyQuest[]>([]);
@@ -36,7 +73,10 @@ export function DailyQuestPage() {
     }
 
     try {
-      const newQuest = saveDailyQuest({ title: trimmedTitle });
+      const newQuest = saveDailyQuest({
+        title: trimmedTitle,
+        rewardPreview: getDefaultRewardPreview(quests.length),
+      });
 
       setQuests((currentQuests) => [newQuest, ...currentQuests]);
       setTitle("");
@@ -176,7 +216,7 @@ export function DailyQuestPage() {
                     {quest.rewardPreview && (
                       <div className="flex items-center gap-2 rounded-md bg-background/70 px-3 py-2 text-sm text-primary">
                         <Sparkles className="h-4 w-4" />
-                        +{quest.rewardPreview.amount}
+                        {formatRewardPreview(quest.rewardPreview)}
                       </div>
                     )}
                     <button
