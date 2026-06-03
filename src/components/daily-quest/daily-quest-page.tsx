@@ -1,29 +1,40 @@
-import { CheckCircle2, Circle, Sparkles } from "lucide-react";
-import { PageHeader, PageShell } from "@/components/ui/page-shell";
-import { CardHeader, SurfaceCard } from "@/components/ui/surface-card";
+"use client";
 
-const quests = [
-  {
-    title: "Write one honest reflection",
-    description: "写下一段真实的今日感受",
-    reward: "Knowledge Scroll +2",
-    done: true,
-  },
-  {
-    title: "Shape a small creation",
-    description: "完成一个微小但完整的作品动作",
-    reward: "Creation Shard +1",
-    done: false,
-  },
-  {
-    title: "Reach out with warmth",
-    description: "向一位同行者表达感谢或支持",
-    reward: "Companions +1",
-    done: false,
-  },
-];
+import { useEffect, useState } from "react";
+import { Circle, Sparkles } from "lucide-react";
+import { PageHeader, PageShell } from "@/components/ui/page-shell";
+import { Button } from "@/components/ui/button";
+import { CardHeader, SurfaceCard } from "@/components/ui/surface-card";
+import {
+  getDailyQuests,
+  saveDailyQuest,
+} from "@/lib/storage/daily-quest-storage";
+import type { DailyQuest } from "@/types/daily-quest";
 
 export function DailyQuestPage() {
+  const [quests, setQuests] = useState<DailyQuest[]>([]);
+  const [title, setTitle] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    setQuests(getDailyQuests());
+  }, []);
+
+  function handleAddQuest() {
+    const trimmedTitle = title.trim();
+
+    if (!trimmedTitle) {
+      setErrorMessage("Please name this quest. 请先写下任务名称。");
+      return;
+    }
+
+    const newQuest = saveDailyQuest({ title: trimmedTitle });
+
+    setQuests((currentQuests) => [newQuest, ...currentQuests]);
+    setTitle("");
+    setErrorMessage("");
+  }
+
   return (
     <PageShell>
       <PageHeader
@@ -36,7 +47,7 @@ export function DailyQuestPage() {
         <SurfaceCard>
           <CardHeader title="Today Focus" description="今日专注" />
           <div className="mt-8 flex h-28 w-28 items-center justify-center rounded-full bg-secondary/70 text-3xl font-medium text-primary">
-            1 / 3
+            {quests.length}
           </div>
           <p className="mt-6 text-sm leading-6 text-muted-foreground">
             保持节奏，不追求完成全部，只确认今天确实向前了一点。
@@ -44,30 +55,53 @@ export function DailyQuestPage() {
         </SurfaceCard>
 
         <div className="space-y-3">
-          {quests.map((quest) => {
-            const Icon = quest.done ? CheckCircle2 : Circle;
+          <article className="rounded-lg border border-white/70 bg-white/58 p-6 shadow-[0_18px_54px_rgba(44,52,64,0.06)]">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <input
+                value={title}
+                onChange={(event) => {
+                  setTitle(event.target.value);
+                  setErrorMessage("");
+                }}
+                className="h-10 min-w-0 flex-1 rounded-lg border border-white/80 bg-background/70 px-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                placeholder="Add a daily quest / 添加每日任务"
+                type="text"
+              />
+              <Button onClick={handleAddQuest}>Add Quest 添加任务</Button>
+            </div>
+            {errorMessage && (
+              <p className="mt-3 text-sm font-medium text-destructive">
+                {errorMessage}
+              </p>
+            )}
+          </article>
 
+          {quests.map((quest) => {
             return (
               <article
-                key={quest.title}
+                key={quest.id}
                 className="rounded-lg border border-white/70 bg-white/58 p-6 shadow-[0_18px_54px_rgba(44,52,64,0.06)]"
               >
                 <div className="flex flex-col items-start gap-4 sm:flex-row">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-secondary/70 text-primary">
-                    <Icon className="h-5 w-5" />
+                    <Circle className="h-5 w-5" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <h2 className="text-lg font-medium leading-7 text-foreground">
                       {quest.title}
                     </h2>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {quest.description}
-                    </p>
+                    {quest.description && (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {quest.description}
+                      </p>
+                    )}
                   </div>
-                  <div className="flex shrink-0 items-center gap-2 rounded-md bg-background/70 px-3 py-2 text-sm text-primary">
-                    <Sparkles className="h-4 w-4" />
-                    {quest.reward}
-                  </div>
+                  {quest.rewardPreview && (
+                    <div className="flex shrink-0 items-center gap-2 rounded-md bg-background/70 px-3 py-2 text-sm text-primary">
+                      <Sparkles className="h-4 w-4" />
+                      +{quest.rewardPreview.amount}
+                    </div>
+                  )}
                 </div>
               </article>
             );
